@@ -1,0 +1,163 @@
+<?php
+
+// TODO: Add apropriate field descriptions to section.admin.inc
+// TODO: Permission only to translate the sections - 'section translate'
+
+require_once 'section.api.inc';
+
+/**
+ * Implements hook_perm()
+ */
+function section_perm() {
+  return array(
+    'section admin',
+    'section translate',
+  );
+}
+
+/**
+ * Implements hook_menu()
+ */
+function section_menu() {
+  $items = array();
+
+  $items['admin/settings/section'] = array(
+    'title'            => 'Section',
+    'description'      => "Configure module's settings",
+    'page callback'    => 'drupal_get_form',
+    'page arguments'   => array('section_settings_form'),
+    'access arguments' => array('administer site configuration'),
+    'type'             => MENU_NORMAL_ITEM,
+    'file'             => 'section.admin.inc',
+  );
+
+  $items['admin/build/section'] = array(
+    'title'            => 'Section',
+    'description'      => "Configure module's settings",
+    'page callback'    => 'drupal_get_form',
+    'page arguments'   => array('section_view_form'),
+    'access arguments' => array('section admin'),
+    'type'             => MENU_NORMAL_ITEM,
+    'file'             => 'section.admin.inc',
+  );
+
+  $items['admin/build/section/view'] = array(
+    'title'            => 'View',
+    'page callback'    => 'section_view_pages',
+    'access arguments' => array('section admin'),
+    'type'             => MENU_DEFAULT_LOCAL_TASK,
+    'weight'           => 0,
+    'file'             => 'section.admin.inc',
+  );
+
+  $items['admin/build/section/add'] = array(
+    'title'            => 'Add',
+    'page callback'    => 'drupal_get_form',
+    'page arguments'   => array('section_edit_form'),
+    'access arguments' => array('section admin'),
+    'type'             => MENU_LOCAL_TASK,
+    'weight'           => 1,
+    'file'             => 'section.admin.inc',
+  );
+
+  $items['admin/build/section/%section'] = array(
+    'title'            => 'Section',
+    'page callback'    => 'drupal_get_form',
+    'page arguments'   => array('section_edit_form', 3),
+    'access callback'  => 'section_check_access',
+    'access arguments' => array(3, 'edit'),
+    'type'             => MENU_CALLBACK,
+    'file'             => 'section.admin.inc',
+  );
+
+  $items['admin/build/section/%section/edit'] = array(
+    'title'            => 'Edit',
+    'type'             => MENU_DEFAULT_LOCAL_TASK,
+    'weight'           => 0,
+  );
+
+  $items['admin/build/section/%section/field'] = array(
+    'title'            => 'Fields',
+    'page callback'    => 'drupal_get_form',
+    'page arguments'   => array('section_fields_form', 3),
+    'access arguments' => array('section admin'),
+    'type'             => MENU_LOCAL_TASK,
+    'weight'           => 1,
+    'file'             => 'section.admin.inc',
+  );
+
+  $items['admin/build/section/%section/delete'] = array(
+    'title'            => 'Delete section',
+    'page callback'    => 'drupal_get_form',
+    'page arguments'   => array('section_delete_form', 3),
+    'access callback'  => 'section_check_access',
+    'access arguments' => array(3, 'delete'),
+    'type'             => MENU_CALLBACK,
+    'file'             => 'section.admin.inc',
+  );
+
+  $items['admin/build/section/%section/field/view'] = array(
+    'title'            => 'View',
+    'type'             => MENU_DEFAULT_LOCAL_TASK,
+    'weight'           => 0,
+  );
+
+  $items['admin/build/section/%section/field/add'] = array(
+    'title'            => 'Add',
+    'page callback'    => 'drupal_get_form',
+    'page arguments'   => array('section_field_edit_form', 3),
+    'access arguments' => array('section admin'),
+    'type'             => MENU_LOCAL_TASK,
+    'weight'           => 1,
+    'file'             => 'section.admin.inc',
+  );
+
+  $items['admin/build/section/%section/field/%section_field/edit'] = array(
+    'title'            => 'Edit field',
+    'page callback'    => 'drupal_get_form',
+    'page arguments'   => array('section_field_edit_form', 3, 5),
+    'access callback'  => 'section_check_field_access',
+    'access arguments' => array(3, 'edit'),
+    'type'             => MENU_CALBACK,
+    'file'             => 'section.admin.inc',
+  );
+
+  $items['admin/build/section/%section/field/%section_field/delete'] = array(
+    'title'            => 'Delete field',
+    'page callback'    => 'drupal_get_form',
+    'page arguments'   => array('section_field_delete_form', 3, 5),
+    'access callback'  => 'section_check_field_access',
+    'access arguments' => array(3, 'delete'),
+    'type'             => MENU_CALBACK,
+    'file'             => 'section.admin.inc',
+  );
+
+  return $items;
+}
+
+function section_theme() {
+  return array(
+    'section_view_form' => array(
+      'arguments' => array('form' => array()),
+    ),
+    'section_fields_form' => array(
+      'arguments' => array('form' => array()),
+    ),
+  );
+}
+
+function section_check_access($section, $type, $account = NULL) {
+  if ($type == 'delete' && $section->locked) {
+    return FALSE;
+  }
+
+  return user_access('section admin', $account);
+}
+
+function section_check_field_access($field, $type, $account = NULL) {
+  if ($type == 'delete' && $field->locked) {
+    return FALSE;
+  }
+
+  return user_access('section admin', $account);
+}

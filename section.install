@@ -1,0 +1,140 @@
+<?php
+
+/**
+ * Implements hook_schema()
+ */
+function section_schema() {
+  // Locked field - valoarea e modulul care l-a blocat. nu permite modificarea, section, field
+  $schema['sections'] = array(
+    'fields' => array(
+      'id'           => array('type' => 'serial',  'not null' => TRUE, 'unsigned' => TRUE),
+      'machine_name' => array('type' => 'varchar', 'not null' => TRUE, 'length' => 64, 'default' => ''),
+      'table_name'   => array('type' => 'varchar', 'not null' => TRUE, 'length' => 64, 'default' => ''),
+      'remote_key'   => array('type' => 'varchar', 'not null' => TRUE, 'length' => 64, 'default' => ''),
+      'locked'       => array('type' => 'varchar', 'not null' => TRUE, 'length' => 64, 'default' => ''),
+      'weight'       => array('type' => 'int',     'not null' => TRUE, 'default' => 0),
+      'type'         => array('type' => 'int',     'not null' => TRUE, 'default' => 0),
+      'validation'   => array('type' => 'text'),
+      'status'       => array('type' => 'int',     'not null' => TRUE, 'default' => 0),
+    ),
+    'primary key' => array('id'),
+  );
+  
+  $schema['section_details'] = array(
+    'fields' => array(
+      'id'         => array('type' => 'serial',  'not null' => TRUE, 'unsigned' => TRUE),
+      'section_id' => array('type' => 'int',     'not null' => TRUE, 'unsigned' => TRUE, 'default' => 0),
+      'language'   => array('type' => 'varchar', 'not null' => TRUE, 'length' => 5, 'default' => ''),
+      'title'      => array('type' => 'varchar', 'not null' => TRUE, 'length' => 255, 'default' => ''),
+    ),
+    'primary key' => array('id'),
+  );
+  
+  $schema['section_fields'] = array(
+    'fields' => array(
+      'id'            => array('type' => 'serial',  'not null' => TRUE, 'unsigned' => TRUE),
+      'section_id'    => array('type' => 'int',     'not null' => TRUE, 'unsigned' => TRUE, 'default' => 0),
+      'machine_name'  => array('type' => 'varchar', 'not null' => TRUE, 'length' => 64, 'default' => ''),
+      'locked'        => array('type' => 'varchar', 'not null' => TRUE, 'length' => 64, 'default' => ''),
+      'type'          => array('type' => 'varchar', 'not null' => TRUE, 'length' => 32, 'default' => ''),
+      'sql_type'      => array('type' => 'varchar', 'not null' => TRUE, 'length' => 255, 'default' => ''),
+      'weight'        => array('type' => 'int',     'not null' => TRUE, 'default' => 0),
+      'searchable'    => array('type' => 'varchar', 'not null' => TRUE, 'length' => 32, 'default' => ''),
+      'status'        => array('type' => 'int',     'not null' => TRUE, 'default' => 0),
+      'category'      => array('type' => 'varchar', 'not null' => TRUE, 'length' => 255, 'default' => ''),
+      'field_size'    => array('type' => 'int',     'not null' => TRUE, 'default' => 0),
+      'min_length'    => array('type' => 'int',     'not null' => TRUE, 'default' => 0),
+      'max_length'    => array('type' => 'int',     'not null' => TRUE, 'default' => 0),
+      'required'      => array('type' => 'int',     'not null' => TRUE, 'default' => 0),
+      'default_value' => array('type' => 'varchar', 'not null' => TRUE, 'length' => 255, 'default' => ''),
+      'source'        => array('type' => 'text'),
+      'file_extensions'  => array('type' => 'varchar', 'not null' => TRUE, 'length' => 64, 'default' => ''),
+      'file_max_size'    => array('type' => 'varchar', 'not null' => TRUE, 'length' => 32, 'default' => ''),
+      'file_upload_path' => array('type' => 'varchar', 'not null' => TRUE, 'length' => 255, 'default' => ''),
+      'imagecache_preset' => array('type' => 'varchar', 'not null' => TRUE, 'length' => 255, 'default' => ''),
+    ),
+    'primary key' => array('id'),
+  );
+  
+  $schema['section_field_details'] = array(
+    'fields' => array(
+      'id'          => array('type' => 'serial',  'not null' => TRUE, 'unsigned' => TRUE),
+      'field_id'    => array('type' => 'int',     'not null' => TRUE, 'unsigned' => TRUE, 'default' => 0),
+      'language'    => array('type' => 'varchar', 'not null' => TRUE, 'length' => 5, 'default' => ''),
+      'title'       => array('type' => 'varchar', 'not null' => TRUE, 'length' => 255, 'default' => ''),
+      'description' => array('type' => 'varchar', 'not null' => TRUE, 'length' => 255, 'default' => ''),
+    ),
+    'primary key' => array('id'),
+  );
+  
+  $schema['search_conditions'] = array(
+    'fields' => array(
+      'id'         => array('type' => 'serial',  'not null' => TRUE, 'unsigned' => TRUE),
+      'category'   => array('type' => 'varchar', 'not null' => TRUE, 'length' => 32),
+      'name'       => array('type' => 'varchar', 'not null' => TRUE, 'length' => 32),
+      'expression' => array('type' => 'varchar', 'not null' => TRUE, 'length' => 32),
+      'num_args'   => array('type' => 'int',     'not null' => TRUE, 'default' => 0),
+    ),
+    'primary key' => array('id'),
+  );
+  
+  // Dynamically build sections' schemas
+  if (function_exists('section_load_sections')) {
+    $sections = section_load_sections(FALSE, TRUE);
+    foreach ($sections as $section) {
+      $schema[$section->table_name] = drupal_get_schema($section->table_name);
+      
+      if (empty($schema[$section->table_name])) {
+        $schema[$section->table_name] = array(
+          'fields' => array(
+            'id' => array(
+              'type' => 'serial',
+              'unsigned' => TRUE,
+              'not null' => TRUE,
+            ),
+          ),
+          'primary key' => array('id'),
+        );
+      }
+      
+      if (!empty($section->remote_key)) {
+        $schema[$section->table_name]['fields'][$section->remote_key] = array(
+          'type' => 'int',
+          'unsigned' => TRUE,
+          'not null' => TRUE,
+        );
+      }
+      
+      $fields = section_load_fields($section, FALSE, TRUE);
+      foreach ($fields as $field) {
+        $spec = section_build_sql_spec($field);
+        if (!empty($spec)) {
+          $schema[$section->table_name]['fields'][$field->machine_name] = $spec;
+        }
+      }
+    }
+  }
+  
+  return $schema;
+}
+
+/**
+ * Implements hook_install()
+ */
+function section_install() {
+  drupal_install_schema('section');
+}
+
+/**
+ * Implements hook_uninstall()
+ */
+function section_uninstall() {
+  $result = db_query("SELECT id, table_name FROM {sections}");
+  while ($data = db_fetch_object($result)) {
+    if (db_table_exists($data->table_name)) {
+      db_query("DROP TABLE {" . $data->table_name . "}");
+    }
+  }
+  
+  drupal_uninstall_schema('section');
+}
